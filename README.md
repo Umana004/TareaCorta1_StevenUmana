@@ -1,2 +1,2 @@
-# TareaCorta1_StevenUmana
-Optimización de coloración de grafos.
+# Tarea Corta #1 - Coloración de Grafos
+### Descripción
