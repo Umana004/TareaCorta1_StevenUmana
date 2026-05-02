@@ -4,4 +4,5 @@ Se implementa un Algoritmo Genetico para el problema de coloracion de grafos, da
 
 ### Integrantes
 Deylan Salas
+
 Steven Umaña
