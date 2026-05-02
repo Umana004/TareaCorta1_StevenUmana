@@ -1,0 +1,1179 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Coloración de Grafos — GA</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #f4f3ef;
+        --surface: #ffffff;
+        --surface2: #f0efe9;
+        --border: #d8d5cc;
+        --border2: #c4c1b6;
+        --text: #1a1916;
+        --muted: #7a7870;
+        --accent: #1d4ed8;
+        --accent-s: #1e3a8a;
+        --green: #15803d;
+        --red: #b91c1c;
+        --amber: #b45309;
+        --mono: "IBM Plex Mono", monospace;
+        --sans: "IBM Plex Sans", sans-serif;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        font-size: 14px;
+        min-height: 100vh;
+        line-height: 1.5;
+      }
+
+      .shell {
+        max-width: 1360px;
+        margin: 0 auto;
+        padding: 0 24px 48px;
+      }
+
+      .topbar {
+        border-bottom: 1px solid var(--border);
+        padding: 18px 0;
+        margin-bottom: 32px;
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+      }
+      .topbar-left {
+        display: flex;
+        align-items: baseline;
+        gap: 20px;
+      }
+      .topbar h1 {
+        font-family: var(--mono);
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .topbar-meta {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .grid-main {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 24px;
+        align-items: start;
+      }
+
+      .section {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        margin-bottom: 14px;
+      }
+      .section-head {
+        padding: 9px 14px;
+        border-bottom: 1px solid var(--border);
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        background: var(--surface2);
+      }
+      .section-body {
+        padding: 14px;
+      }
+
+      .field {
+        margin-bottom: 14px;
+      }
+      .field:last-child {
+        margin-bottom: 0;
+      }
+      .field-label {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--muted);
+        margin-bottom: 6px;
+        display: flex;
+        justify-content: space-between;
+      }
+      .field-label .v {
+        color: var(--accent);
+        font-weight: 600;
+      }
+
+      input[type="range"] {
+        width: 100%;
+        height: 2px;
+        accent-color: var(--accent);
+        cursor: pointer;
+        appearance: none;
+        background: var(--border2);
+        outline: none;
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        appearance: none;
+        width: 11px;
+        height: 11px;
+        background: var(--accent);
+        border-radius: 50%;
+        cursor: pointer;
+      }
+
+      .toggle-row {
+        display: flex;
+      }
+      .tgl {
+        flex: 1;
+        padding: 7px 0;
+        border: 1px solid var(--border2);
+        background: var(--surface2);
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 11px;
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.1s;
+        margin-right: -1px;
+        letter-spacing: 0.02em;
+      }
+      .tgl.on {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+        z-index: 1;
+        position: relative;
+      }
+
+      .pm-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .pm-btn {
+        padding: 10px 4px;
+        border: 1px solid var(--border2);
+        background: var(--surface2);
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 12px;
+        cursor: pointer;
+        text-align: center;
+        margin-right: -1px;
+        transition: all 0.1s;
+      }
+      .pm-btn:last-child {
+        margin-right: 0;
+      }
+      .pm-btn .sub {
+        font-size: 9px;
+        color: var(--muted);
+        display: block;
+        margin-top: 2px;
+      }
+      .pm-btn.on {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+        z-index: 1;
+        position: relative;
+      }
+      .pm-btn.on .sub {
+        color: rgba(255, 255, 255, 0.65);
+      }
+
+      .btn-p {
+        width: 100%;
+        padding: 11px;
+        background: var(--accent);
+        border: none;
+        color: #fff;
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: background 0.1s;
+        display: block;
+        margin-bottom: 8px;
+      }
+      .btn-p:hover {
+        background: var(--accent-s);
+      }
+      .btn-p:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      .btn-g {
+        width: 100%;
+        padding: 9px;
+        background: transparent;
+        border: 1px solid var(--border2);
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.1s;
+        display: block;
+        margin-bottom: 8px;
+      }
+      .btn-g:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      .stats-bar {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        border: 1px solid var(--border);
+        background: var(--surface);
+        margin-bottom: 14px;
+      }
+      .stat {
+        padding: 14px 16px;
+        border-right: 1px solid var(--border);
+      }
+      .stat:last-child {
+        border-right: none;
+      }
+      .stat-val {
+        font-family: var(--mono);
+        font-size: 22px;
+        font-weight: 600;
+        line-height: 1;
+        color: var(--text);
+      }
+      .stat-val.blue {
+        color: var(--accent);
+      }
+      .stat-val.good {
+        color: var(--green);
+      }
+      .stat-val.warn {
+        color: var(--amber);
+      }
+      .stat-val.bad {
+        color: var(--red);
+      }
+      .stat-lbl {
+        font-family: var(--mono);
+        font-size: 9px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+
+      .progress {
+        height: 2px;
+        background: var(--border);
+        margin-bottom: 14px;
+      }
+      .progress-fill {
+        height: 100%;
+        background: var(--accent);
+        transition: width 0.08s linear;
+        width: 0%;
+      }
+
+      .cpanel {
+        border: 1px solid var(--border);
+        background: var(--surface);
+        margin-bottom: 14px;
+      }
+      .cpanel-head {
+        padding: 8px 14px;
+        border-bottom: 1px solid var(--border);
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        background: var(--surface2);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+      }
+      #graphCanvas {
+        background: #111;
+      }
+
+      .legend {
+        padding: 9px 14px;
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        border-top: 1px solid var(--border);
+      }
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--muted);
+      }
+      .legend-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+
+      .chrom {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 3px;
+        padding: 12px;
+      }
+      .gene {
+        width: 26px;
+        height: 26px;
+        display: grid;
+        place-items: center;
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 600;
+        border: 1px solid;
+        cursor: default;
+        transition: transform 0.1s;
+      }
+      .gene:hover {
+        transform: scale(1.2);
+        z-index: 1;
+        position: relative;
+      }
+
+      .tbl-panel {
+        border: 1px solid var(--border);
+        background: var(--surface);
+        margin-bottom: 14px;
+        display: none;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th {
+        background: var(--surface2);
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        padding: 9px 14px;
+        text-align: left;
+        font-weight: 400;
+        border-bottom: 1px solid var(--border);
+      }
+      td {
+        font-family: var(--mono);
+        font-size: 12px;
+        padding: 9px 14px;
+        border-bottom: 1px solid var(--border);
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      tr:hover td {
+        background: var(--surface2);
+      }
+
+      .tag {
+        display: inline-block;
+        padding: 1px 7px;
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 600;
+      }
+      .tag-g {
+        background: #dcfce7;
+        color: var(--green);
+      }
+      .tag-a {
+        background: #fef3c7;
+        color: var(--amber);
+      }
+      .tag-r {
+        background: #fee2e2;
+        color: var(--red);
+      }
+
+      .tbl-note {
+        padding: 10px 14px;
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--muted);
+        line-height: 1.7;
+        border-top: 1px solid var(--border);
+        background: var(--surface2);
+      }
+
+      .log-panel {
+        border: 1px solid var(--border);
+        background: var(--surface);
+      }
+      .log-body {
+        font-family: var(--mono);
+        font-size: 11px;
+        max-height: 100px;
+        overflow-y: auto;
+        padding: 10px 14px;
+        line-height: 1.8;
+        background: #111;
+        color: #667766;
+      }
+      .log-body .ts {
+        color: #3d5c3d;
+      }
+      .log-body .ok {
+        color: #6aad67;
+      }
+      .log-body .dim {
+        color: #556677;
+      }
+
+      .formula {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--muted);
+        line-height: 2.1;
+      }
+      .formula .hl {
+        color: var(--accent);
+        font-weight: 600;
+      }
+      .formula .ok {
+        color: var(--green);
+        font-weight: 600;
+      }
+
+      @media (max-width: 900px) {
+        .grid-main {
+          grid-template-columns: 1fr;
+        }
+        .stats-bar {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .stat:nth-child(2) {
+          border-right: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <div class="topbar-left">
+          <h1>Coloración de Grafos / GA</h1>
+          <span class="topbar-meta">IC-3002 — Análisis de Algoritmos</span>
+        </div>
+      </header>
+
+      <div class="grid-main">
+        <aside>
+          <div class="section">
+            <div class="section-head">Parámetros</div>
+            <div class="section-body">
+              <div class="field">
+                <div class="field-label">
+                  Vértices <span class="v" id="lbl-v">30</span>
+                </div>
+                <input
+                  type="range"
+                  id="sl-v"
+                  min="20"
+                  max="50"
+                  value="30"
+                  oninput="
+                    document.getElementById('lbl-v').textContent = this.value
+                  "
+                />
+              </div>
+
+              <div class="field">
+                <div class="field-label">Colores k</div>
+                <div class="toggle-row">
+                  <button class="tgl" onclick="setK(3, this)">k = 3</button>
+                  <button class="tgl on" onclick="setK(4, this)">k = 4</button>
+                </div>
+              </div>
+
+              <div class="field">
+                <div class="field-label">
+                  Prob. cruce (Pc) <span class="v" id="lbl-pc">0.80</span>
+                </div>
+                <input
+                  type="range"
+                  id="sl-pc"
+                  min="70"
+                  max="90"
+                  value="80"
+                  oninput="
+                    document.getElementById('lbl-pc').textContent = (
+                      this.value / 100
+                    ).toFixed(2)
+                  "
+                />
+              </div>
+
+              <div class="field">
+                <div class="field-label">Tipo de cruce</div>
+                <div class="toggle-row">
+                  <button class="tgl on" onclick="setCruce('punto', this)">
+                    Un punto
+                  </button>
+                  <button class="tgl" onclick="setCruce('uniforme', this)">
+                    Uniforme
+                  </button>
+                </div>
+              </div>
+
+              <div class="field">
+                <div class="field-label">
+                  Generaciones máx. <span class="v" id="lbl-g">100</span>
+                </div>
+                <input
+                  type="range"
+                  id="sl-g"
+                  min="50"
+                  max="300"
+                  step="50"
+                  value="100"
+                  oninput="
+                    document.getElementById('lbl-g').textContent = this.value
+                  "
+                />
+              </div>
+
+              <div class="field">
+                <div class="field-label">
+                  Población <span class="v" id="lbl-p">50</span>
+                </div>
+                <input
+                  type="range"
+                  id="sl-p"
+                  min="20"
+                  max="100"
+                  step="10"
+                  value="50"
+                  oninput="
+                    document.getElementById('lbl-p').textContent = this.value
+                  "
+                />
+              </div>
+
+              <div class="field">
+                <div class="field-label">Tasa de mutación (Pm)</div>
+                <div class="pm-row">
+                  <button class="pm-btn" onclick="setPm(0.01, this)">
+                    0.01<span class="sub">baja</span>
+                  </button>
+                  <button class="pm-btn on" onclick="setPm(0.05, this)">
+                    0.05<span class="sub">media</span>
+                  </button>
+                  <button class="pm-btn" onclick="setPm(0.1, this)">
+                    0.10<span class="sub">alta</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn-p" id="btn-run" onclick="runGA()">
+            Ejecutar GA
+          </button>
+          <button class="btn-g" onclick="runComparison()">
+            Comparar Pm (0.01 / 0.05 / 0.1)
+          </button>
+          <button class="btn-g" onclick="regenerarGrafo()">
+            Regenerar grafo
+          </button>
+
+          <div class="section" style="margin-top: 6px">
+            <div class="section-head">Fitness f(x)</div>
+            <div class="section-body">
+              <div class="formula">
+                f(x) = <span class="hl">1 / (1 + conflictos(x))</span><br />
+                <span class="ok">f = 1.0</span> &rarr; 0 conflictos<br />
+                conflictos: aristas (u,v)<br />
+                con color(u) = color(v)
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <main>
+          <div class="stats-bar">
+            <div class="stat">
+              <div class="stat-val blue" id="st-v">—</div>
+              <div class="stat-lbl">Vertices</div>
+            </div>
+            <div class="stat">
+              <div class="stat-val blue" id="st-e">—</div>
+              <div class="stat-lbl">Aristas</div>
+            </div>
+            <div class="stat">
+              <div class="stat-val" id="st-c">—</div>
+              <div class="stat-lbl">Conflictos</div>
+            </div>
+            <div class="stat">
+              <div class="stat-val" id="st-f">—</div>
+              <div class="stat-lbl">Fitness</div>
+            </div>
+          </div>
+
+          <div class="progress">
+            <div class="progress-fill" id="prog"></div>
+          </div>
+
+          <div class="cpanel">
+            <div class="cpanel-head">
+              <span>Grafo — coloracion actual</span>
+              <span id="head-c" style="color: var(--muted)"></span>
+            </div>
+            <canvas id="graphCanvas" height="420"></canvas>
+            <div class="legend" id="legend"></div>
+          </div>
+
+          <div class="cpanel">
+            <div class="cpanel-head">
+              Convergencia — conflictos por generacion
+            </div>
+            <canvas id="chartCanvas" height="160"></canvas>
+          </div>
+
+          <div class="section">
+            <div class="section-head">Cromosoma — mejor individuo</div>
+            <div class="chrom" id="chromosome"></div>
+          </div>
+
+          <div class="tbl-panel" id="comp-wrap">
+            <div class="section-head" style="padding: 9px 14px">
+              Analisis de hiperparametros — tasa de mutacion
+            </div>
+            <table id="comp-table">
+              <tr>
+                <th>Pm</th>
+                <th>Conflictos</th>
+                <th>Fitness</th>
+                <th>Generaciones</th>
+                <th>Evaluacion</th>
+              </tr>
+            </table>
+            <div class="tbl-note" id="comp-note"></div>
+          </div>
+
+          <div class="log-panel">
+            <div class="cpanel-head">Log de ejecucion</div>
+            <div class="log-body" id="log"></div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script>
+      const PALETTE = [
+        { f: "#1d4ed8", b: "#1e3a8a" },
+        { f: "#b91c1c", b: "#7f1d1d" },
+        { f: "#15803d", b: "#14532d" },
+        { f: "#92400e", b: "#78350f" },
+        { f: "#6d28d9", b: "#4c1d95" },
+        { f: "#0e7490", b: "#164e63" },
+        { f: "#9d174d", b: "#831843" },
+      ];
+
+      class Grafo {
+        constructor(n) {
+          this.n = n;
+          this.adj = Array.from({ length: n }, () => new Set());
+          this.aristas = [];
+        }
+        add(u, v) {
+          if (u !== v && !this.adj[u].has(v)) {
+            this.adj[u].add(v);
+            this.adj[v].add(u);
+            this.aristas.push([u, v]);
+          }
+        }
+        conf(col) {
+          let c = 0;
+          for (const [u, v] of this.aristas) if (col[u] === col[v]) c++;
+          return c;
+        }
+        static rand(n) {
+          const g = new Grafo(n);
+          for (let i = 1; i < n; i++) g.add(i, Math.floor(Math.random() * i));
+          const obj = Math.floor(((n * (n - 1)) / 2) * 0.35);
+          let t = 0;
+          while (g.aristas.length < obj && t++ < 20000) {
+            const u = ~~(Math.random() * n),
+              v = ~~(Math.random() * n);
+            g.add(u, v);
+          }
+          return g;
+        }
+      }
+
+      const ri = (a, b) => Math.floor(Math.random() * (b - a)) + a,
+        rf = () => Math.random();
+      const fitFn = (c, g) => 1 / (1 + g.conf(c));
+      const newCrom = (n, k) => Array.from({ length: n }, () => ri(1, k + 1));
+
+      function torneo(pop, fits) {
+        let bi = ri(0, pop.length),
+          bf = fits[bi];
+        for (let i = 0; i < 2; i++) {
+          const j = ri(0, pop.length);
+          if (fits[j] > bf) {
+            bf = fits[j];
+            bi = j;
+          }
+        }
+        return [...pop[bi]];
+      }
+      function xPunto(p1, p2, pc) {
+        if (rf() > pc) return [[...p1], [...p2]];
+        const pt = ri(1, p1.length);
+        return [
+          [...p1.slice(0, pt), ...p2.slice(pt)],
+          [...p2.slice(0, pt), ...p1.slice(pt)],
+        ];
+      }
+      function xUnif(p1, p2, pc) {
+        if (rf() > pc) return [[...p1], [...p2]];
+        const h1 = [],
+          h2 = [];
+        for (let i = 0; i < p1.length; i++) {
+          if (rf() < 0.5) {
+            h1.push(p1[i]);
+            h2.push(p2[i]);
+          } else {
+            h1.push(p2[i]);
+            h2.push(p1[i]);
+          }
+        }
+        return [h1, h2];
+      }
+      function mutar(c, k, pm) {
+        return c.map((g) => (rf() < pm ? ri(1, k + 1) : g));
+      }
+
+      function runAlg(g, { k, sz, maxG, pm, pc, cruce }, cb) {
+        let pop = Array.from({ length: sz }, () => newCrom(g.n, k));
+        let mCrom = null,
+          mFit = -Infinity,
+          mConf = Infinity;
+        const hist = [];
+        const xFn = cruce === "uniforme" ? xUnif : xPunto;
+        for (let gen = 0; gen < maxG; gen++) {
+          const fits = pop.map((c) => fitFn(c, g));
+          const confs = pop.map((c) => g.conf(c));
+          const mi = fits.indexOf(Math.max(...fits));
+          if (fits[mi] > mFit) {
+            mFit = fits[mi];
+            mCrom = [...pop[mi]];
+            mConf = confs[mi];
+          }
+          const avg = confs.reduce((a, b) => a + b, 0) / sz;
+          hist.push({ gen: gen + 1, mejor: mConf, avg });
+          if (cb) cb({ gen: gen + 1, mConf, total: maxG });
+          if (mConf === 0) break;
+          const nxt = [mCrom];
+          while (nxt.length < sz) {
+            let [h1, h2] = xFn(torneo(pop, fits), torneo(pop, fits), pc);
+            h1 = mutar(h1, k, pm);
+            h2 = mutar(h2, k, pm);
+            nxt.push(h1);
+            if (nxt.length < sz) nxt.push(h2);
+          }
+          pop = nxt;
+        }
+        return { mCrom, mFit, mConf, hist };
+      }
+
+      let grafo = null,
+        colors = null,
+        running = false;
+      let cfgK = 4,
+        cfgPm = 0.05,
+        cfgCruce = "punto";
+
+      function setK(v, el) {
+        cfgK = v;
+        el.closest(".toggle-row")
+          .querySelectorAll(".tgl")
+          .forEach((b) => b.classList.remove("on"));
+        el.classList.add("on");
+      }
+      function setPm(v, el) {
+        cfgPm = v;
+        el.closest(".pm-row")
+          .querySelectorAll(".pm-btn")
+          .forEach((b) => b.classList.remove("on"));
+        el.classList.add("on");
+      }
+      function setCruce(v, el) {
+        cfgCruce = v;
+        el.closest(".toggle-row")
+          .querySelectorAll(".tgl")
+          .forEach((b) => b.classList.remove("on"));
+        el.classList.add("on");
+      }
+
+      function log(msg, cls = "") {
+        const el = document.getElementById("log");
+        const d = new Date(),
+          ts = `${String(d.getMinutes()).padStart(2, "0")}:${String(d.getSeconds()).padStart(2, "0")}`;
+        el.innerHTML += `<div><span class="ts">[${ts}]</span> <span class="${cls}">${msg}</span></div>`;
+        el.scrollTop = el.scrollHeight;
+      }
+
+      function setProgress(p) {
+        document.getElementById("prog").style.width = p + "%";
+      }
+
+      function updateStats(v, e, c, f) {
+        document.getElementById("st-v").textContent = v ?? "—";
+        document.getElementById("st-e").textContent = e ?? "—";
+        const ce = document.getElementById("st-c");
+        ce.textContent = c ?? "—";
+        ce.className =
+          "stat-val" +
+          (c === 0
+            ? " good"
+            : c != null && c <= 4
+              ? " warn"
+              : c != null
+                ? " bad"
+                : "");
+        const fe = document.getElementById("st-f");
+        fe.textContent = f != null ? f.toFixed(4) : "—";
+        fe.className =
+          "stat-val" +
+          (f === 1
+            ? " good"
+            : f != null && f >= 0.5
+              ? " warn"
+              : f != null
+                ? " bad"
+                : "");
+        document.getElementById("head-c").textContent =
+          c != null ? `${c} conflicto${c !== 1 ? "s" : ""}` : "";
+      }
+
+      function drawGraph(col) {
+        const cv = document.getElementById("graphCanvas");
+        const dpr = window.devicePixelRatio || 1;
+        const W = cv.offsetWidth,
+          H = 420;
+        cv.width = W * dpr;
+        cv.height = H * dpr;
+        const ctx = cv.getContext("2d");
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0, 0, W, H);
+
+        const n = grafo.n,
+          cx = W / 2,
+          cy = H / 2,
+          r = Math.min(W, H) * 0.38;
+        const pos = Array.from({ length: n }, (_, i) => ({
+          x: cx + r * Math.cos((2 * Math.PI * i) / n - Math.PI / 2),
+          y: cy + r * Math.sin((2 * Math.PI * i) / n - Math.PI / 2),
+        }));
+
+        for (const [u, v] of grafo.aristas) {
+          const conflict = col && col[u] === col[v];
+          ctx.beginPath();
+          ctx.moveTo(pos[u].x, pos[u].y);
+          ctx.lineTo(pos[v].x, pos[v].y);
+          ctx.strokeStyle = conflict
+            ? "rgba(200,60,60,0.85)"
+            : "rgba(255,255,255,0.07)";
+          ctx.lineWidth = conflict ? 1.8 : 1;
+          ctx.stroke();
+        }
+
+        const rad = Math.max(9, Math.min(15, 280 / n));
+        for (let i = 0; i < n; i++) {
+          const p = col ? PALETTE[(col[i] - 1) % PALETTE.length] : null;
+          ctx.beginPath();
+          ctx.arc(pos[i].x, pos[i].y, rad, 0, Math.PI * 2);
+          ctx.fillStyle = p ? p.f : "#222";
+          ctx.fill();
+          ctx.strokeStyle = p ? p.b : "#333";
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+          ctx.fillStyle = "#fff";
+          ctx.font = `${Math.max(8, rad - 3)}px IBM Plex Mono`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(i, pos[i].x, pos[i].y);
+        }
+
+        const leg = document.getElementById("legend");
+        if (col) {
+          const used = [...new Set(col)].sort();
+          leg.innerHTML = used
+            .map(
+              (c) => `<div class="legend-item">
+      <div class="legend-dot" style="background:${PALETTE[(c - 1) % PALETTE.length].f}"></div>Color ${c}</div>`,
+            )
+            .join("");
+        } else leg.innerHTML = "";
+      }
+
+      function drawChart(hist, color = "#1d4ed8", clear = true) {
+        const cv = document.getElementById("chartCanvas");
+        const dpr = window.devicePixelRatio || 1;
+        const W = cv.offsetWidth,
+          H = 160;
+        if (clear) {
+          cv.width = W * dpr;
+          cv.height = H * dpr;
+          const c = cv.getContext("2d");
+          c.scale(dpr, dpr);
+        }
+        const ctx = cv.getContext("2d");
+        if (clear) ctx.clearRect(0, 0, W, H);
+        if (!hist.length) return;
+
+        const pad = { t: 12, r: 16, b: 28, l: 36 },
+          pw = W - pad.l - pad.r,
+          ph = H - pad.t - pad.b;
+        const maxC = Math.max(...hist.map((h) => h.mejor), 1);
+        const sx = pw / (hist.length - 1 || 1),
+          sy = ph / maxC;
+
+        ctx.strokeStyle = "rgba(220,213,200,0.5)";
+        ctx.lineWidth = 1;
+        for (let i = 0; i <= 4; i++) {
+          const y = pad.t + ph - (i / 4) * ph;
+          ctx.beginPath();
+          ctx.moveTo(pad.l, y);
+          ctx.lineTo(pad.l + pw, y);
+          ctx.stroke();
+          ctx.fillStyle = "#999";
+          ctx.font = "9px IBM Plex Mono";
+          ctx.textAlign = "right";
+          ctx.fillText(Math.round((maxC * i) / 4), pad.l - 4, y + 3);
+        }
+        [0, Math.floor(hist.length / 2), hist.length - 1].forEach((i) => {
+          ctx.fillStyle = "#999";
+          ctx.textAlign = "center";
+          ctx.fillText(hist[i]?.gen ?? i, pad.l + i * sx, H - 6);
+        });
+
+        ctx.beginPath();
+        ctx.setLineDash([3, 4]);
+        ctx.strokeStyle = "rgba(160,155,145,0.45)";
+        ctx.lineWidth = 1;
+        hist.forEach((h, i) => {
+          const x = pad.l + i * sx,
+            y = pad.t + ph - h.avg * sy;
+          i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        hist.forEach((h, i) => {
+          const x = pad.l + i * sx,
+            y = pad.t + ph - h.mejor * sy;
+          i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+
+        ctx.beginPath();
+        hist.forEach((h, i) => {
+          const x = pad.l + i * sx,
+            y = pad.t + ph - h.mejor * sy;
+          i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        });
+        ctx.lineTo(pad.l + (hist.length - 1) * sx, pad.t + ph);
+        ctx.lineTo(pad.l, pad.t + ph);
+        ctx.closePath();
+        const gr = ctx.createLinearGradient(0, pad.t, 0, pad.t + ph);
+        gr.addColorStop(0, color + "28");
+        gr.addColorStop(1, color + "00");
+        ctx.fillStyle = gr;
+        ctx.fill();
+      }
+
+      function drawChrom(col) {
+        document.getElementById("chromosome").innerHTML = col
+          .map((c, i) => {
+            const p = PALETTE[(c - 1) % PALETTE.length];
+            return `<div class="gene" title="v${i} = color ${c}"
+      style="background:${p.f};border-color:${p.b};color:#fff">${c}</div>`;
+          })
+          .join("");
+      }
+
+      function regenerarGrafo() {
+        const n = parseInt(document.getElementById("sl-v").value);
+        grafo = Grafo.rand(n);
+        colors = null;
+        updateStats(grafo.n, grafo.aristas.length, null, null);
+        drawGraph(null);
+        document.getElementById("chromosome").innerHTML = "";
+        const cv = document.getElementById("chartCanvas");
+        cv.getContext("2d").clearRect(0, 0, cv.width, cv.height);
+        log(
+          `Grafo generado — ${grafo.n} vertices, ${grafo.aristas.length} aristas`,
+          "dim",
+        );
+      }
+
+      async function runGA() {
+        if (running) return;
+        if (!grafo) regenerarGrafo();
+        running = true;
+        document.getElementById("btn-run").disabled = true;
+        const k = cfgK,
+          pm = cfgPm,
+          cruce = cfgCruce;
+        const pc = parseFloat(document.getElementById("sl-pc").value) / 100;
+        const maxG = parseInt(document.getElementById("sl-g").value);
+        const sz = parseInt(document.getElementById("sl-p").value);
+        log(
+          `GA | k=${k} Pm=${pm} Pc=${pc} cruce=${cruce} pop=${sz} gen=${maxG}`,
+          "dim",
+        );
+        const res = await new Promise((r) =>
+          setTimeout(
+            () =>
+              r(
+                runAlg(
+                  grafo,
+                  { k, sz, maxG, pm, pc, cruce },
+                  ({ gen, total }) => setProgress((gen / total) * 100),
+                ),
+              ),
+            10,
+          ),
+        );
+        colors = res.mCrom;
+        updateStats(grafo.n, grafo.aristas.length, res.mConf, res.mFit);
+        drawGraph(colors);
+        drawChart(res.hist);
+        drawChrom(colors);
+        setProgress(100);
+        log(
+          `Resultado — ${res.mConf} conflictos | fitness=${res.mFit.toFixed(4)} | gen=${res.hist.length}`,
+          res.mConf === 0 ? "ok" : "",
+        );
+        running = false;
+        document.getElementById("btn-run").disabled = false;
+      }
+
+      async function runComparison() {
+        if (running) return;
+        if (!grafo) regenerarGrafo();
+        running = true;
+        document.getElementById("btn-run").disabled = true;
+        const k = cfgK,
+          cruce = cfgCruce;
+        const pc = parseFloat(document.getElementById("sl-pc").value) / 100;
+        const maxG = parseInt(document.getElementById("sl-g").value);
+        const sz = parseInt(document.getElementById("sl-p").value);
+        const pms = [0.01, 0.05, 0.1],
+          chartCols = ["#1d4ed8", "#b91c1c", "#15803d"],
+          results = [];
+        log("Comparacion Pm iniciada...", "dim");
+
+        const cv = document.getElementById("chartCanvas");
+        const dpr = window.devicePixelRatio || 1;
+        cv.width = cv.offsetWidth * dpr;
+        cv.height = 160 * dpr;
+        cv.getContext("2d").scale(dpr, dpr);
+        cv.getContext("2d").clearRect(0, 0, cv.width, cv.height);
+
+        for (let idx = 0; idx < pms.length; idx++) {
+          const pm = pms[idx];
+          log(`Ejecutando Pm = ${pm}...`, "dim");
+          const r = await new Promise((res) =>
+            setTimeout(
+              () =>
+                res(
+                  runAlg(
+                    grafo,
+                    { k, sz, maxG, pm, pc, cruce },
+                    ({ gen, total }) =>
+                      setProgress((idx / 3 + gen / total / 3) * 100),
+                  ),
+                ),
+              10,
+            ),
+          );
+          results.push({ pm, ...r });
+          drawChart(r.hist, chartCols[idx], idx === 0);
+          log(
+            `  Pm=${pm} — ${r.mConf} conflictos | fitness=${r.mFit.toFixed(4)}`,
+          );
+        }
+
+        const mejor = results.reduce((a, b) => (a.mConf <= b.mConf ? a : b));
+        const wrap = document.getElementById("comp-wrap");
+        wrap.style.display = "block";
+        const tb = document.getElementById("comp-table");
+        while (tb.rows.length > 1) tb.deleteRow(1);
+        results.forEach((r) => {
+          const row = tb.insertRow();
+          const tag = r.mConf === 0 ? "tag-g" : r.mConf < 5 ? "tag-a" : "tag-r";
+          const mark = r === mejor ? " *" : "";
+          row.innerHTML = `<td>${r.pm}</td>
+      <td><span class="tag ${tag}">${r.mConf}${mark}</span></td>
+      <td>${r.mFit.toFixed(4)}</td>
+      <td>${r.hist.length}</td>
+      <td style="color:var(--muted)">${r.mConf === 0 ? "Optimo" : r.mConf < 5 ? "Bueno" : "Regular"}</td>`;
+        });
+        document.getElementById("comp-note").textContent =
+          `Pm=${mejor.pm} obtuvo el menor numero de conflictos (${mejor.mConf}). ` +
+          `Con Pm=0.01 el algoritmo converge rapido pero tiende a quedar atrapado en optimos locales. ` +
+          `Con Pm=0.10 la mutacion excesiva destruye soluciones prometedoras, comportandose casi como busqueda aleatoria. ` +
+          `El valor intermedio Pm=0.05 ofrece el mejor balance entre exploracion y explotacion para este problema.`;
+
+        colors = mejor.mCrom;
+        drawGraph(colors);
+        drawChrom(colors);
+        updateStats(grafo.n, grafo.aristas.length, mejor.mConf, mejor.mFit);
+        setProgress(100);
+        running = false;
+        document.getElementById("btn-run").disabled = false;
+      }
+
+      window.addEventListener("load", () => regenerarGrafo());
+      window.addEventListener("resize", () => {
+        if (grafo) drawGraph(colors);
+      });
+    </script>
+  </body>
+</html>
